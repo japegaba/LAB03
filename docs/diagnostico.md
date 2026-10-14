@@ -1,0 +1,12 @@
+# Diagnóstico de `Program.cs`
+
+El programa ejecuta en consola una partida de triqui para dos personas, con X y O alternando turnos.
+Muestra el tablero y el marcador, verifica victorias y empates, y acumula los resultados entre partidas.
+Al terminar cada partida pregunta si se desea jugar otra y, al salir, muestra el marcador final.
+
+| ID | Hallazgo | Dónde | Tipo | Impacto | Cómo se reproduce o se ve | Decisión del equipo |
+|---|---|---|---|---|---|---|
+| D-01 | No se comprueba la diagonal secundaria (casillas 3, 5 y 7), por lo que una victoria en esa línea no se reconoce. | `CheckWinner`, líneas 78-90; falta la comprobación después de la diagonal principal. | Falla | Alto | Ejecutar `dotnet run` y escribir, en orden, `3`, `1`, `5`, `2`, `7`. Tras el último movimiento X ocupa 3, 5 y 7, pero la partida no anuncia `Gana X`; muestra el turno de O y continúa. | |
+| D-02 | La lectura convierte la entrada con `int.Parse` sin validar texto ni fin de entrada; una entrada no numérica o EOF termina el programa con una excepción no controlada. | Lectura de `pos`, línea 34. | Falla | Alto | Ejecutar `dotnet run` y, cuando se solicite una casilla, escribir `x`. El proceso termina con `System.FormatException` y código de salida 1. También ocurre al cerrar la entrada en ese momento: `int.Parse` recibe `null` y lanza `ArgumentNullException`. | |
+| D-03 | El flujo principal concentra presentación, lectura de consola, estado del tablero, reglas, marcador y repetición de partidas. Incumple el principio de responsabilidad única (SRP): reúne varias razones de cambio en el mismo flujo. | Bloque principal, líneas 7-76; las únicas funciones auxiliares están en 78-102. | Diseño | Medio | Se observa recorriendo el bloque principal: gestiona directamente el turno y el tablero, imprime las pantallas, valida movimientos, decide el fin de partida y actualiza el marcador. | |
+| D-04 | Los nombres mezclan convenciones e idiomas: por ejemplo, `CheckWinner` usa PascalCase y `printBoard` camelCase; las variables también alternan abreviaturas y español. Esto dificulta la lectura uniforme. | Variables, líneas 7-10; funciones, líneas 78 y 93. | Legibilidad | Bajo | Se observa al comparar las declaraciones de funciones y variables con el flujo principal. | |
